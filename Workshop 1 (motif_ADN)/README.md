@@ -11,12 +11,11 @@ To solve the problem, we create 6 classes:
 - `Reader`: Class to read database..
 - `Motif`: Class to iterate over data (Arraylist from database, given by reader) to generate all combinantion in each secuence and return the motif.
 - `EntropyMotif`: Class similary to Motif, but introducing Shannon Concept (3rd step from the problem).
-- `Verificator`: Class to verify that parameters are within the intervals specified by the problem.
 
 ## Folder structure
 
 - `bin`: Compiled files output (.class).
 - `.vscode`: Project and vscode for this project config.
-- `data`: Here is the database.
+- `data`: Here is the database, results and report.
 - `src`: Source folder (Development).
 - `lib` : Dependencies .
