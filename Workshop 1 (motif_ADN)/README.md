@@ -1,18 +1,22 @@
-## Getting Started
+## System Analysis - Workshop 1
 
-Welcome to the VS Code Java world. Here is a guideline to help you get started to write Java code in Visual Studio Code.
+Problem:  https://github.com/EngAndres/ud-public/blob/main/courses/systems-analysis/workshops/Workshop_1.pdf
 
-## Folder Structure
+## Development
 
-The workspace contains two folders by default, where:
+To solve the problem, we create 6 classes:
 
-- `src`: the folder to maintain sources
-- `lib`: the folder to maintain dependencies
+- `App`: Class to maintain the main of the program
+- `GeneratorBD`: Class to create artificial database, generate secuences and save them in a file (For default in App.java, 'database.txt') 
+- `Reader`: Class to read database..
+- `Motif`: Class to iterate over data (Arraylist from database, given by reader) to generate all combinantion in each secuence and return the motif.
+- `EntropyMotif`: Class similary to Motif, but introducing Shannon Concept (3rd step from the problem).
+- `Verificator`: Class to verify that parameters are within the intervals specified by the problem.
 
-Meanwhile, the compiled output files will be generated in the `bin` folder by default.
+## Folder structure
 
-> If you want to customize the folder structure, open `.vscode/settings.json` and update the related settings there.
-
-## Dependency Management
-
-The `JAVA PROJECTS` view allows you to manage your dependencies. More details can be found [here](https://github.com/microsoft/vscode-java-dependency#manage-dependencies).
+- `bin`: Compiled files output (.class).
+- `.vscode`: Project and vscode for this project config.
+- `data`: Here is the database.
+- `src`: Source folder (Development).
+- `lib` : Dependencies .
