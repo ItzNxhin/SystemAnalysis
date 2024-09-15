@@ -10,7 +10,5 @@ public class App {
         Map.Entry<String, Integer> motif =m.processChainsInParallel(r.readData(), 4);
         System.out.println("Motif : " +motif.getKey());
         System.out.println("Frecuency : " +motif.getValue());
-        
-         
     }
 }
