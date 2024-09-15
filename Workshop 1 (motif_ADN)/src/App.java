@@ -10,7 +10,7 @@ public class App {
         double perG = 0.3;
         double perT = 0.2;
         String pertString = perA + "-" + perC + "-" + perG + "-" + perT;
-        // Database path
+        // Database pathee
         String filepath = "data/database.txt";
         String csv = "data/results.csv";
         // Sizes
