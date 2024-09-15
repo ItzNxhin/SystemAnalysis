@@ -5,10 +5,36 @@ import java.util.Map;
 import java.util.Collections;
 import java.util.Comparator;
 
+/**
+ * This class generates the motif but including Shannon Entropy
+ */
 public class EntropyMotif {
 
-    // Método para generar todas las combinaciones (motivos) de tamaño sSize en la cadena
-    public ArrayList<String> combinations(String chain, int sSize) {
+    private ArrayList<String> chains;
+    private int sSize;
+    private double treshold;
+
+    private long startTime;
+    private long finishTime;
+    private long executionTime;
+    
+    public long getExecutionTime() {
+        return executionTime;
+    }
+
+    public EntropyMotif(ArrayList<String> chains, int sSize, double treshold) {
+        this.chains = chains;
+        this.sSize = sSize;
+        this.treshold = treshold;
+    }
+
+    /**
+     * This method generates all the combinations in a sequence
+     * @param chain
+     * @param sSize
+     * @return
+     */
+    public ArrayList<String> combinations(String chain) {
         ArrayList<String> cmb = new ArrayList<>();
         for (int i = 0; i <= chain.length() - sSize; i++) {
             String motif = chain.substring(i, i + sSize);
@@ -19,7 +45,12 @@ public class EntropyMotif {
         return cmb;
     }
 
-    // Método para contar cuántas veces aparece un motivo en la cadena
+    /**
+     * This method count how many times are a combination in a sequence
+     * @param motif
+     * @param chain
+     * @return
+     */
     public int countMotif(String motif, String chain) {
         int count = 0;
         int index = 0;
@@ -30,79 +61,90 @@ public class EntropyMotif {
         return count;
     }
 
-    // Método para calcular la entropía de Shannon de una cadena
-    public double calculateShannonEntropy(String chain) {
-        // Contar las frecuencias de A, C, G, T
-        HashMap<Character, Integer> frequencyMap = new HashMap<>();
-        for (char base : chain.toCharArray()) {
-            frequencyMap.put(base, frequencyMap.getOrDefault(base, 0) + 1);
-        }
-
-        // Calcular la probabilidad de cada base
-        double entropy = 0.0;
-        int length = chain.length();
-        for (Map.Entry<Character, Integer> entry : frequencyMap.entrySet()) {
-            double p = (double) entry.getValue() / length;  // p(x) = frecuencia / longitud total
-            entropy -= p * (Math.log(p) / Math.log(2));     // Suma ponderada: -p(x) log2(p(x))
-        }
-
-        return entropy; // Retorna la entropía de Shannon
-    }
-
-    // Método para generar un HashMap con motivos y sus conteos a nivel global
-    public synchronized void accumulateMotifs(String chain, int sSize, HashMap<String, Integer> globalMotifMap) {
-        ArrayList<String> motifs = combinations(chain, sSize);
+    /**
+     * This method generates HashMap(Synchronized for each sequence) with all combiantions and frequence
+     * @param chain
+     * @param sSize
+     * @param globalMotifMap
+     */
+    public synchronized void accumulateMotifs(String chain, HashMap<String, Integer> globalMotifMap) {
+        ArrayList<String> motifs = combinations(chain);
         for (String motif : motifs) {
             int count = countMotif(motif, chain);
             
-            // Sincronización en la actualización del mapa global
             synchronized (globalMotifMap) {
                 globalMotifMap.put(motif, globalMotifMap.getOrDefault(motif, 0) + count);
             }
         }
     }
 
-    // Método para obtener el motivo más repetido de un HashMap
+    /**
+     * This method return the combiantion with more frecuence sorting the hashmap
+     * @param listMotif
+     * @return
+     */
     public Map.Entry<String, Integer> getMostFrequentMotif(HashMap<String, Integer> listMotif) {
         List<Map.Entry<String, Integer>> sortedMotifs = new ArrayList<>(listMotif.entrySet());
 
-        // Ordenar por valor (frecuencia) de mayor a menor
         Collections.sort(sortedMotifs, new Comparator<Map.Entry<String, Integer>>() {
             public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
                 return o2.getValue().compareTo(o1.getValue());
             }
         });
 
-        // Retornar solo el motivo más frecuente (primero en la lista ordenada)
         return sortedMotifs.get(0);
     }
 
-    // Método para procesar todas las cadenas en paralelo, filtrar por entropía y acumular los motivos
-    public void processChainsInParallel(ArrayList<String> chains, int sSize, double entropyThreshold) {
+    /**
+     * This method calculate shannon Entropy
+     * @param chain
+     * @return
+     */
+    public double calculateShannonEntropy(String chain) {
+        HashMap<Character, Integer> frequencyMap = new HashMap<>();
+        for (char base : chain.toCharArray()) {
+            frequencyMap.put(base, frequencyMap.getOrDefault(base, 0) + 1);
+        }
+
+        double entropy = 0.0;
+        int length = chain.length();
+        for (Map.Entry<Character, Integer> entry : frequencyMap.entrySet()) {
+            double p = (double) entry.getValue() / length; 
+            entropy -= p * (Math.log(p) / Math.log(2));    
+        }
+
+        return entropy; 
+    }
+
+    /**
+     * This method with all before method generates the motif, filtering chains, return the motif and his frequence
+     * @param chains
+     * @param sSize
+     * @return
+     */    
+    public Map.Entry<String, Integer> mofitMultiThread() {
+        fitro();
+
+        Map.Entry<String, Integer> mostFrequent;
         int nThreads = chains.size();
         HashMap<String, Integer> globalMotifMap = new HashMap<>();
         ArrayList<Thread> threads = new ArrayList<>();
 
-        // Crear un hilo para procesar cada cadena y acumular los motivos en el mapa global
+        startTime=System.nanoTime();
+        
+        // Thread per chain
         for (int i = 0; i < nThreads; i++) {
             final String chain = chains.get(i);
 
             Thread t = new Thread(() -> {
-                double entropy = calculateShannonEntropy(chain);
-
-                // Solo procesar cadenas con entropía mayor al umbral
-                if (entropy > entropyThreshold) {
-                    accumulateMotifs(chain, sSize, globalMotifMap);
-                } else {
-                    System.out.println("Cadena descartada por baja entropía: " + chain + " | Entropía: " + entropy);
-                }
+                accumulateMotifs(chain, globalMotifMap);
             });
 
             threads.add(t);
             t.start();
         }
 
-        // Esperar a que todos los hilos terminen
+        // Wait all theards
         for (Thread t : threads) {
             try {
                 t.join();
@@ -111,14 +153,24 @@ public class EntropyMotif {
             }
         }
 
-        // Obtener el motivo más frecuente globalmente
-        if (!globalMotifMap.isEmpty()) {
-            Map.Entry<String, Integer> mostFrequent = getMostFrequentMotif(globalMotifMap);
-            // Imprimir el motivo más repetido
-            System.out.println("Motivo más frecuente global:");
-            System.out.println("Motivo: " + mostFrequent.getKey() + " | Frecuencia: " + mostFrequent.getValue());
-        } else {
-            System.out.println("No se encontraron motivos válidos después de aplicar el filtro de entropía.");
+        finishTime = System.nanoTime();
+
+        
+        executionTime = finishTime - startTime;
+
+        if(!globalMotifMap.isEmpty())mostFrequent = getMostFrequentMotif(globalMotifMap);
+        else return null;
+
+        return mostFrequent;
+    }
+
+    private void fitro(){
+        ArrayList<String> filtered = new ArrayList<>();
+        for(String i : chains){
+            double ent = calculateShannonEntropy(i);
+            if(ent>treshold) filtered.add(i);
         }
-    } 
+        this.chains=filtered;
+    }
+
 }

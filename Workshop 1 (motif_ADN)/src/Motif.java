@@ -13,6 +13,13 @@ public class Motif {
 
     private  ArrayList<String> chains;
     private int sSize;
+    private long startTime;
+    private long finishTime;
+    private long executionTime;
+    
+    public long getExecutionTime() {
+        return executionTime;
+    }
     public Motif(ArrayList<String> chains, int sSize){
         this.chains = chains;
         this.sSize= sSize;
@@ -95,6 +102,7 @@ public class Motif {
         HashMap<String, Integer> globalMotifMap = new HashMap<>();
         ArrayList<Thread> threads = new ArrayList<>();
 
+        startTime=System.nanoTime();
         // Thread per chain
         for (int i = 0; i < nThreads; i++) {
             final String chain = chains.get(i);
@@ -115,6 +123,11 @@ public class Motif {
                 e.printStackTrace();
             }
         }
+
+        finishTime = System.nanoTime();
+
+        
+        executionTime = finishTime - startTime;
 
         Map.Entry<String, Integer> mostFrequent = getMostFrequentMotif(globalMotifMap);
 
