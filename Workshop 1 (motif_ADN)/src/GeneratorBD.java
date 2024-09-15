@@ -23,7 +23,7 @@ public class GeneratorBD {
      * @param probG
      * @param probT
      */
-    public GeneratorBD(int sizeChain, int nSequences, double probA, double probC, double probG, double probT){
+    public GeneratorBD(String filepath, int sizeChain, int nSequences, double probA, double probC, double probG, double probT){
         this.nSequences = nSequences;
         this.sizeChain = sizeChain;
         this.probA = probA;
@@ -31,13 +31,13 @@ public class GeneratorBD {
         this.probG = probG;
         this.probT = probT;
         try {
-            this.out = new PrintWriter("database.txt");
+            this.out = new PrintWriter(filepath);
         } catch (Exception e) {
         }
     }
     
     /**
-     * This class genarate and save line per line each sequence (Calling respective method)
+     * This method genarate and save line per line each sequence (Calling respective method)
      */
     public void generateDTB(){
         for (int i = 0; i < nSequences; i++) {
@@ -48,7 +48,7 @@ public class GeneratorBD {
     }
 
     /**
-     * This class generate a secuence with the defined parameters
+     * This method generate a secuence with the defined parameters
      * @return
      */
     private String generateChain(){
@@ -68,7 +68,7 @@ public class GeneratorBD {
     }
 
     /**
-     * This class saves in file a line
+     * This method saves in file a line
      * @param str
      * @param arch
      */
@@ -77,7 +77,7 @@ public class GeneratorBD {
     }
 
     /**
-     * This class convert the posbilites to a double array
+     * This method convert the posbilites to a double array
      * @return
      */
     private double[] posibilities(){

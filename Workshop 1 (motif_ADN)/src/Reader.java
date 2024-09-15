@@ -7,9 +7,9 @@ public class Reader {
 
     private BufferedReader reader;
 
-    public Reader() {
+    public Reader(String file) {
         try {
-            this.reader = new BufferedReader(new FileReader("database.txt"));
+            this.reader = new BufferedReader(new FileReader(file));
         } catch (IOException e) {
             
         }

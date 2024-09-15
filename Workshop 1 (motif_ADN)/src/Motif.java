@@ -5,10 +5,25 @@ import java.util.Map;
 import java.util.Collections;
 import java.util.Comparator;
 
+
+/**
+ * Thsi class generates the motif the database
+ */
 public class Motif {
 
-    // Método para generar todas las combinaciones (motivos) de tamaño sSize en la cadena
-    public ArrayList<String> combinations(String chain, int sSize) {
+    private  ArrayList<String> chains;
+    private int sSize;
+    public Motif(ArrayList<String> chains, int sSize){
+        this.chains = chains;
+        this.sSize= sSize;
+    }
+    /**
+     * This method generates all the combinations in a sequence
+     * @param chain
+     * @param sSize
+     * @return
+     */
+    public ArrayList<String> combinations(String chain) {
         ArrayList<String> cmb = new ArrayList<>();
         for (int i = 0; i <= chain.length() - sSize; i++) {
             String motif = chain.substring(i, i + sSize);
@@ -19,7 +34,12 @@ public class Motif {
         return cmb;
     }
 
-    // Método para contar cuántas veces aparece un motivo en la cadena
+    /**
+     * This method count how many times are a combination in a sequence
+     * @param motif
+     * @param chain
+     * @return
+     */
     public int countMotif(String motif, String chain) {
         int count = 0;
         int index = 0;
@@ -30,53 +50,64 @@ public class Motif {
         return count;
     }
 
-    // Método para generar un HashMap con motivos y sus conteos a nivel global
-    public synchronized void accumulateMotifs(String chain, int sSize, HashMap<String, Integer> globalMotifMap) {
-        ArrayList<String> motifs = combinations(chain, sSize);
+    /**
+     * This method generates HashMap(Synchronized for each sequence) with all combiantions and frequence
+     * @param chain
+     * @param sSize
+     * @param globalMotifMap
+     */
+    public synchronized void accumulateMotifs(String chain, HashMap<String, Integer> globalMotifMap) {
+        ArrayList<String> motifs = combinations(chain);
         for (String motif : motifs) {
             int count = countMotif(motif, chain);
             
-            // Sincronización en la actualización del mapa global
             synchronized (globalMotifMap) {
                 globalMotifMap.put(motif, globalMotifMap.getOrDefault(motif, 0) + count);
             }
         }
     }
 
-    // Método para obtener el motivo más repetido de un HashMap
+    /**
+     * This method return the combiantion with more frecuence sorting the hashmap
+     * @param listMotif
+     * @return
+     */
     public Map.Entry<String, Integer> getMostFrequentMotif(HashMap<String, Integer> listMotif) {
         List<Map.Entry<String, Integer>> sortedMotifs = new ArrayList<>(listMotif.entrySet());
 
-        // Ordenar por valor (frecuencia) de mayor a menor
         Collections.sort(sortedMotifs, new Comparator<Map.Entry<String, Integer>>() {
             public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
                 return o2.getValue().compareTo(o1.getValue());
             }
         });
 
-        // Retornar solo el motivo más frecuente (primero en la lista ordenada)
         return sortedMotifs.get(0);
     }
 
-    // Método para procesar todas las cadenas en paralelo y acumular los motivos
-    public Map.Entry<String, Integer> processChainsInParallel(ArrayList<String> chains, int sSize) {
+    /**
+     * This method with all before method generates the motif, return the motif and his frequence
+     * @param chains
+     * @param sSize
+     * @return
+     */
+    public Map.Entry<String, Integer> mofitMultiThread() {
         int nThreads = chains.size();
         HashMap<String, Integer> globalMotifMap = new HashMap<>();
         ArrayList<Thread> threads = new ArrayList<>();
 
-        // Crear un hilo para procesar cada cadena y acumular los motivos en el mapa global
+        // Thread per chain
         for (int i = 0; i < nThreads; i++) {
             final String chain = chains.get(i);
 
             Thread t = new Thread(() -> {
-                accumulateMotifs(chain, sSize, globalMotifMap);
+                accumulateMotifs(chain, globalMotifMap);
             });
 
             threads.add(t);
             t.start();
         }
 
-        // Esperar a que todos los hilos terminen
+        // Wait all theards
         for (Thread t : threads) {
             try {
                 t.join();
@@ -85,7 +116,6 @@ public class Motif {
             }
         }
 
-        // Obtener el motivo más frecuente globalmente
         Map.Entry<String, Integer> mostFrequent = getMostFrequentMotif(globalMotifMap);
 
         return mostFrequent;
